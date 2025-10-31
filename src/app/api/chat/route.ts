@@ -205,6 +205,14 @@ async function callCozeAPI(
                 // Split text into smaller chunks for better streaming
                 // Make chunks small to increase the perceived streaming effect
                 const chunkSize = 40;
+                const totalChunks = Math.ceil(text.length / chunkSize);
+                // Calculate delay to complete streaming within ~3 seconds
+                // Total streaming duration: 3000ms, distribute evenly across chunks
+                const targetDuration = 3000; // 3 seconds
+                const delayPerChunk = Math.floor(targetDuration / totalChunks);
+                // Ensure minimum delay of 10ms for visible effect, max 200ms to avoid feeling slow
+                const actualDelay = Math.max(10, Math.min(delayPerChunk, 200));
+                
                 for (let i = 0; i < text.length; i += chunkSize) {
                   const textChunk = text.slice(i, i + chunkSize);
                   const chunk = {
@@ -214,15 +222,23 @@ async function callCozeAPI(
                   const line = `0:${JSON.stringify(chunk)}\n`;
                   const encoded = encoder.encode(line);
                   controller.enqueue(encoded);
-                  // Yield so the client can paint progressively
-                  // eslint-disable-next-line no-await-in-loop
-                  await new Promise((r) => setTimeout(r, 0));
+                  // Add delay between chunks to create smooth streaming effect
+                  // Last chunk doesn't need delay
+                  if (i + chunkSize < text.length) {
+                    // eslint-disable-next-line no-await-in-loop
+                    await new Promise((r) => setTimeout(r, actualDelay));
+                  }
                 }
                 console.log(
                   'Sent text-delta chunks, total length:',
                   text.length,
                   'chunks:',
-                  Math.ceil(text.length / chunkSize),
+                  totalChunks,
+                  'delay per chunk:',
+                  actualDelay,
+                  'ms, estimated duration:',
+                  totalChunks * actualDelay,
+                  'ms',
                   'preview:',
                   text.substring(0, 100)
                 );
