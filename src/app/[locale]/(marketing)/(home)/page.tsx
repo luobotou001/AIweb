@@ -16,7 +16,7 @@ import { constructMetadata } from '@/lib/metadata';
 import type { Metadata } from 'next';
 import type { Locale } from 'next-intl';
 import { getTranslations } from 'next-intl/server';
-
+import { redirect } from 'next/navigation';
 /**
  * https://next-intl.dev/docs/environments/actions-metadata-route-handlers#metadata-api
  */
@@ -43,6 +43,7 @@ interface HomePageProps {
 export default async function HomePage(props: HomePageProps) {
   const params = await props.params;
   const { locale } = params;
+  redirect(`/${locale}/ai/chat`);
   const t = await getTranslations('HomePage');
 
   return (
