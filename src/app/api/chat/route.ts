@@ -138,6 +138,23 @@ async function callCozeAPI(
                 JSON.stringify(data, null, 2)
               );
 
+              // Check for errors first
+              if (data.error_message || data.error_code) {
+                const errorMsg = data.error_message || `Error code: ${data.error_code}`;
+                console.log('Coze API error detected:', errorMsg);
+                
+                // Send user-friendly error message
+                hasText = true;
+                const errorText = '服务运行繁忙，请稍后重试';
+                const errorChunk = {
+                  type: 'text-delta',
+                  textDelta: errorText,
+                };
+                const errorLine = `0:${JSON.stringify(errorChunk)}\n`;
+                controller.enqueue(encoder.encode(errorLine));
+                continue; // Skip to next line
+              }
+
               // Extract text from Coze response
               // Coze API returns: { "code": 0, "msg": "", "data": "{\"output\":\"...\"}" }
               // The data field is a stringified JSON, need to parse it again
@@ -265,7 +282,17 @@ async function callCozeAPI(
         if (buffer.trim()) {
           try {
             const data = JSON.parse(buffer.trim());
-            if (data.content && typeof data.content === 'string') {
+            // Check for errors in buffer
+            if (data.error_message || data.error_code) {
+              const errorText = '服务运行繁忙，请稍后重试';
+              const errorChunk = {
+                type: 'text-delta',
+                textDelta: errorText,
+              };
+              const errorLine = `0:${JSON.stringify(errorChunk)}\n`;
+              controller.enqueue(encoder.encode(errorLine));
+              hasText = true;
+            } else if (data.content && typeof data.content === 'string') {
               const innerData = JSON.parse(data.content);
               if (innerData.output && typeof innerData.output === 'string') {
                 const chunk = {
@@ -274,6 +301,7 @@ async function callCozeAPI(
                 };
                 const line = `0:${JSON.stringify(chunk)}\n`;
                 controller.enqueue(encoder.encode(line));
+                hasText = true;
               }
             } else if (data.data && typeof data.data === 'string') {
               const innerData = JSON.parse(data.data);
@@ -284,6 +312,7 @@ async function callCozeAPI(
                 };
                 const line = `0:${JSON.stringify(chunk)}\n`;
                 controller.enqueue(encoder.encode(line));
+                hasText = true;
               }
             }
           } catch (e) {
@@ -302,16 +331,17 @@ async function callCozeAPI(
         console.log('Sent error chunk:', errorLine.substring(0, 100));
         controller.error(error);
       } finally {
-        // If no text was sent, send an empty text-delta to complete the message
+        // If no text was sent (and no error message), send an error message
         if (!hasText) {
-          console.log('No text received, sending empty text-delta');
-          const emptyChunk = {
+          console.log('No text received, sending error message');
+          const errorText = '服务运行繁忙，请稍后重试';
+          const errorChunk = {
             type: 'text-delta',
-            textDelta: '',
+            textDelta: errorText,
           };
-          const emptyLine = `0:${JSON.stringify(emptyChunk)}\n`;
-          controller.enqueue(encoder.encode(emptyLine));
-          console.log('Sent empty text-delta:', emptyLine);
+          const errorLine = `0:${JSON.stringify(errorChunk)}\n`;
+          controller.enqueue(encoder.encode(errorLine));
+          console.log('Sent error message:', errorLine);
         }
 
         // Send message end marker
