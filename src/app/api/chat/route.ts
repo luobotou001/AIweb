@@ -3,8 +3,8 @@ import { createOpenAI } from '@ai-sdk/openai';
 import { createOpenRouter } from '@openrouter/ai-sdk-provider';
 import { type UIMessage, convertToModelMessages, streamText } from 'ai';
 
-// Allow streaming responses up to 30 seconds
-export const maxDuration = 30;
+// Allow streaming responses up to 5 minutes (Coze API may take time for image analysis)
+export const maxDuration = 300;
 
 /**
  * Call Coze API and convert stream response to AI SDK format
