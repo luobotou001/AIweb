@@ -2,6 +2,10 @@
   "functions": {
     "src/app/api/**/*": {
       "maxDuration": 300
+    },
+    "src/app/api/storage/upload": {
+      "maxDuration": 300,
+      "maxBodySize": 20
     }
   }
 }
