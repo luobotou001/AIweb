@@ -44,6 +44,7 @@ export enum Routes {
   AIText = '/ai/text',
   AIImage = '/ai/image',
   AIChat = '/ai/chat',
+  AIPalmReading = '/ai/palm-reading',
   AIVideo = '/ai/video',
   AIAudio = '/ai/audio',
 

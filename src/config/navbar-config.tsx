@@ -3,36 +3,14 @@
 import { Routes } from '@/routes';
 import type { NestedMenuItem } from '@/types';
 import {
-  AudioLinesIcon,
   BuildingIcon,
-  ChartNoAxesCombinedIcon,
-  CircleDollarSignIcon,
-  CircleHelpIcon,
-  ComponentIcon,
   CookieIcon,
   FileTextIcon,
-  FilmIcon,
-  FlameIcon,
-  FootprintsIcon,
-  ImageIcon,
   ListChecksIcon,
-  LockKeyholeIcon,
-  LogInIcon,
   MailIcon,
   MailboxIcon,
-  MessageCircleIcon,
-  NewspaperIcon,
-  RocketIcon,
   ShieldCheckIcon,
-  SnowflakeIcon,
-  SplitSquareVerticalIcon,
-  SquareCodeIcon,
   SquareKanbanIcon,
-  SquarePenIcon,
-  ThumbsUpIcon,
-  UserPlusIcon,
-  UsersIcon,
-  WandSparklesIcon,
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { websiteConfig } from './website';
@@ -52,8 +30,8 @@ export function useNavbarLinks(): NestedMenuItem[] {
 
   return [
     {
-      title: t('features.title'),
-      href: Routes.Features,
+      title: t('home.title'),
+      href: Routes.Root,
       external: false,
     },
     {
@@ -70,55 +48,6 @@ export function useNavbarLinks(): NestedMenuItem[] {
           },
         ]
       : []),
-    ...(websiteConfig.docs.enable
-      ? [
-          {
-            title: t('docs.title'),
-            href: Routes.Docs,
-            external: false,
-          },
-        ]
-      : []),
-    {
-      title: t('ai.title'),
-      items: [
-        {
-          title: t('ai.items.text.title'),
-          description: t('ai.items.text.description'),
-          icon: <SquarePenIcon className="size-4 shrink-0" />,
-          href: Routes.AIText,
-          external: false,
-        },
-        {
-          title: t('ai.items.image.title'),
-          description: t('ai.items.image.description'),
-          icon: <ImageIcon className="size-4 shrink-0" />,
-          href: Routes.AIImage,
-          external: false,
-        },
-        {
-          title: t('ai.items.chat.title'),
-          description: t('ai.items.chat.description'),
-          icon: <MessageCircleIcon className="size-4 shrink-0" />,
-          href: Routes.AIChat,
-          external: false,
-        },
-        // {
-        //   title: t('ai.items.video.title'),
-        //   description: t('ai.items.video.description'),
-        //   icon: <FilmIcon className="size-4 shrink-0" />,
-        //   href: Routes.AIVideo,
-        //   external: false,
-        // },
-        // {
-        //   title: t('ai.items.audio.title'),
-        //   description: t('ai.items.audio.description'),
-        //   icon: <AudioLinesIcon className="size-4 shrink-0" />,
-        //   href: Routes.AIAudio,
-        //   external: false,
-        // },
-      ],
-    },
     {
       title: t('pages.title'),
       items: [

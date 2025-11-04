@@ -10,12 +10,13 @@ export const maxDuration = 300;
  * Call Coze API and convert stream response to AI SDK format
  */
 async function callCozeAPI(
-  input: string,
+  input: string | null,
   imageUrl: string | null
 ): Promise<Response> {
   const apiKey = process.env.COZE_API_KEY;
   const workflowId = process.env.COZE_WORKFLOW_ID;
   const userName = process.env.COZE_USER_NAME;
+  const userInput = process.env.COZE_USER_INPUT; // 从环境变量读取input
 
   if (!apiKey || !workflowId || !userName) {
     throw new Error(
@@ -23,12 +24,15 @@ async function callCozeAPI(
     );
   }
 
+  // 如果环境变量中没有设置COZE_USER_INPUT，使用传入的input（向后兼容）
+  const finalInput = userInput || input?.trim() || '请总结图片内容';
+
   // Build request body according to Coze API format:
   // {
   //   "workflow_id": "...",
   //   "parameters": {
   //     "user_name": "...",
-  //     "input": "用户输入的文本",
+  //     "input": "用户输入的文本（从环境变量读取）",
   //     "image": "https://...图片URL..."
   //   }
   // }
@@ -43,7 +47,7 @@ async function callCozeAPI(
     workflow_id: workflowId,
     parameters: {
       user_name: userName,
-      input: input.trim(), // 用户输入的文本
+      input: finalInput, // 优先使用环境变量中的input
     },
   };
 
@@ -411,36 +415,38 @@ export async function POST(req: Request) {
 
   // Handle PalmReading (Coze API) model separately
   if (model === 'palmreading') {
-    // Get the last user message
-    const lastMessage = messages[messages.length - 1];
-    if (!lastMessage || lastMessage.role !== 'user') {
-      return new Response(JSON.stringify({ error: 'No user message found' }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' },
-      });
+    // 如果只上传了图片，不需要用户输入文本（从环境变量读取）
+    // 如果同时有messages和imageUrl，优先使用messages中的文本
+    let userInput: string | null = null;
+    
+    if (messages && messages.length > 0) {
+      // Get the last user message
+      const lastMessage = messages[messages.length - 1];
+      if (lastMessage && lastMessage.role === 'user') {
+        // Get user input text from message parts
+        // UIMessage has a 'parts' array, not 'content'
+        if (lastMessage.parts && Array.isArray(lastMessage.parts)) {
+          userInput = lastMessage.parts
+            .filter((part: any) => part.type === 'text')
+            .map((part: any) => part.text || '')
+            .join(' ')
+            .trim();
+        }
+      }
     }
 
-    // Get user input text from message parts
-    // UIMessage has a 'parts' array, not 'content'
-    let userInput = '';
-    if (lastMessage.parts && Array.isArray(lastMessage.parts)) {
-      userInput = lastMessage.parts
-        .filter((part: any) => part.type === 'text')
-        .map((part: any) => part.text || '')
-        .join(' ')
-        .trim();
-    }
-
-    if (!userInput) {
-      return new Response(JSON.stringify({ error: 'User input is empty' }), {
+    // 如果没有图片URL，必须有用户输入
+    if (!imageUrl && !userInput) {
+      return new Response(JSON.stringify({ error: 'Either image or user input is required' }), {
         status: 400,
         headers: { 'Content-Type': 'application/json' },
       });
     }
 
     // Use imageUrl from body parameter (uploaded via Cloudflare storage)
+    // 如果userInput为空，callCozeAPI会从环境变量读取
     try {
-      return await callCozeAPI(userInput, imageUrl || null);
+      return await callCozeAPI(userInput || null, imageUrl || null);
     } catch (error) {
       console.error('Coze API error:', error);
       // Return error in AI SDK stream format

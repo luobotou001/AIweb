@@ -5,8 +5,8 @@ export function MkSaaSLogo({ className }: { className?: string }) {
   return (
     <Image
       src="/mksaas.png"
-      alt="Logo of MkSaaS"
-      title="Logo of MkSaaS"
+      alt="Logo of PalmReading"
+      title="Logo of PalmReading"
       width={96}
       height={96}
       className={cn('size-8 rounded-md', className)}

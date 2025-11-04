@@ -1,8 +1,8 @@
 {
   "Metadata": {
-    "name": "MkSaaS Demo",
-    "title": "MkSaaS - The Best AI SaaS Boilerplate",
-    "description": "MkSaaS is the best AI SaaS boilerplate. Make AI SaaS in days, simply and effortlessly"
+    "name": "PalmReading",
+    "title": "PalmReading - Discover Your Destiny",
+    "description": "AI-Powered Palm Reading - Unlock the ancient secrets hidden in your palm lines with cutting-edge artificial intelligence. Get instant insights about your personality, relationships, career, and future."
   },
   "Common": {
     "premium": "Premium",
@@ -315,6 +315,9 @@
   },
   "Marketing": {
     "navbar": {
+      "home": {
+        "title": "Home"
+      },
       "features": {
         "title": "Features"
       },
@@ -341,6 +344,10 @@
           "chat": {
             "title": "AI Chat",
             "description": "Show how to use AI to chat with your customers"
+          },
+          "palmReading": {
+            "title": "AI Palm Reading",
+            "description": "Use AI to analyze palm lines and discover your destiny"
           },
           "video": {
             "title": "AI Video",

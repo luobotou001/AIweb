@@ -80,8 +80,8 @@ export const websiteConfig: WebsiteConfig = {
   },
   mail: {
     provider: 'resend',
-    fromEmail: 'MkSaaS <support@mksaas.com>',
-    supportEmail: 'MkSaaS <support@mksaas.com>',
+    fromEmail: 'PalmReading <support@palmreading.com>',
+    supportEmail: 'PalmReading <support@palmreading.com>',
   },
   newsletter: {
     enable: true,

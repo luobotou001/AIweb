@@ -1,8 +1,8 @@
 {
   "Metadata": {
-    "name": "MkSaaS Demo",
-    "title": "MkSaaS - 最好的 AI SaaS 模板",
-    "description": "MkSaaS 是构建 AI SaaS 的最佳模板，使用 MkSaaS 可以在几天内轻松构建您的 AI SaaS，简单且毫不费力。"
+    "name": "PalmReading",
+    "title": "PalmReading - Discover Your Destiny",
+    "description": "AI-Powered Palm Reading - Unlock the ancient secrets hidden in your palm lines with cutting-edge artificial intelligence. Get instant insights about your personality, relationships, career, and future."
   },
   "Common": {
     "premium": "付费文章",
@@ -315,6 +315,9 @@
   },
   "Marketing": {
     "navbar": {
+      "home": {
+        "title": "首页"
+      },
       "features": {
         "title": "功能"
       },
@@ -341,6 +344,10 @@
           "chat": {
             "title": "AI 聊天",
             "description": "展示如何使用 AI 与客户聊天"
+          },
+          "palmReading": {
+            "title": "AI 掌纹阅读",
+            "description": "使用 AI 分析掌纹，探索你的命运"
           },
           "video": {
             "title": "AI 视频",
