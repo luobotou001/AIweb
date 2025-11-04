@@ -1,11 +1,11 @@
 'use client';
 
-import { Message, MessageContent } from '@/components/ai-elements/message';
-import { Response } from '@/components/ai-elements/response';
 import { MAX_FILE_SIZE } from '@/lib/constants';
 import { uploadFileFromBrowser } from '@/storage/client';
 import { ImageIcon, Loader2, Upload, X } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { toast } from 'sonner';
 
 export default function PalmReadingBot() {
@@ -50,7 +50,6 @@ export default function PalmReadingBot() {
 
       // Save image URL to state
       setImageUrl(url);
-      toast.success('Image uploaded successfully');
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Upload failed';
       toast.error(message);
@@ -232,57 +231,69 @@ export default function PalmReadingBot() {
               </button>
             </div>
             <div className="mt-4 text-center">
-              <button
-                onClick={handleAnalyze}
-                disabled={isAnalyzing || !imageUrl}
-                className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
-                {isAnalyzing ? (
-                  <>
-                    <Loader2 className="size-4 animate-spin" />
-                    Analyzing your palm...
-                  </>
-                ) : (
-                  <>
-                    <ImageIcon className="size-4" />
-                    Generate My Palm Reading
-                  </>
-                )}
-              </button>
+              {isUploading ? (
+                <div className="inline-flex items-center gap-2 px-6 py-3 rounded-lg font-medium">
+                  <Loader2 className="size-4 animate-spin text-primary" />
+                  <span>Uploading...</span>
+                </div>
+              ) : (
+                <button
+                  onClick={handleAnalyze}
+                  disabled={isAnalyzing || !imageUrl}
+                  className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  {isAnalyzing ? (
+                    <>
+                      <Loader2 className="size-4 animate-spin" />
+                      Analyzing your palm...
+                    </>
+                  ) : (
+                    <>
+                      <ImageIcon className="size-4" />
+                      Generate My Palm Reading
+                    </>
+                  )}
+                </button>
+              )}
             </div>
           </div>
         ) : (
           <div className="text-center space-y-4">
-            <div className="flex justify-center">
-              <div className="p-4 rounded-full bg-primary/10">
-                <Upload className="size-8 text-primary" />
+            {isUploading ? (
+              <div className="flex flex-col items-center justify-center space-y-4 py-8">
+                <Loader2 className="size-12 text-primary animate-spin" />
+                <p className="text-lg font-medium">Uploading...</p>
+                <p className="text-sm text-muted-foreground">
+                  Please wait while we upload your image
+                </p>
               </div>
-            </div>
-            <div>
-              <p className="text-lg font-medium mb-2">
-                Drop your palm photo here or click to browse
-              </p>
-              <p className="text-sm text-muted-foreground">
-                Supports JPG, PNG, GIF up to {MAX_FILE_SIZE / 1024 / 1024}MB
-              </p>
-            </div>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                fileInputRef.current?.click();
-              }}
-              disabled={isUploading}
-              className="inline-flex items-center gap-2 px-6 py-2 bg-muted hover:bg-muted/80 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
-            >
-              {isUploading ? (
-                <>
-                  <Loader2 className="size-4 animate-spin" />
-                  Uploading...
-                </>
-              ) : (
-                'Browse Files'
-              )}
-            </button>
+            ) : (
+              <>
+                <div className="flex justify-center">
+                  <div className="p-4 rounded-full bg-primary/10">
+                    <Upload className="size-8 text-primary" />
+                  </div>
+                </div>
+                <div>
+                  <p className="text-lg font-medium mb-2">
+                    Drop your palm photo here or click to browse
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    Supports JPG, PNG, GIF up to {MAX_FILE_SIZE / 1024 / 1024}MB
+                  </p>
+                </div>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    fileInputRef.current?.click();
+                  }}
+                  disabled={isUploading}
+                  className="inline-flex items-center gap-2 px-6 py-2 bg-muted hover:bg-muted/80 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
+                >
+                  Browse Files
+                </button>
+              </>
+            )}
           </div>
         )}
       </div>
@@ -317,15 +328,13 @@ export default function PalmReadingBot() {
 
       {/* Result Section */}
       {result && (
-        <div className="mt-8 p-6 rounded-lg bg-muted/50 border">
-          <h3 className="text-lg font-semibold mb-4">Your Palm Reading</h3>
-          <Message from="assistant">
-            <MessageContent>
-              <Response className="prose prose-sm max-w-none dark:prose-invert">
-                {result}
-              </Response>
-            </MessageContent>
-          </Message>
+        <div className="mt-8 p-6 md:p-10 rounded-lg bg-purple-900/30 border border-purple-800/50 w-full">
+          <h3 className="text-xl md:text-2xl font-semibold mb-6">Your Palm Reading</h3>
+          <div className="text-base md:text-lg leading-relaxed text-foreground prose prose-base md:prose-lg max-w-none dark:prose-invert prose-headings:text-foreground prose-p:text-foreground prose-strong:text-foreground prose-ul:text-foreground prose-ol:text-foreground prose-li:text-foreground prose-headings:mb-3 prose-headings:mt-6 prose-p:mb-4 prose-p:mt-0">
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+              {result}
+            </ReactMarkdown>
+          </div>
         </div>
       )}
 
