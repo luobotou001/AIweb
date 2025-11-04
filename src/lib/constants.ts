@@ -1,7 +1,7 @@
 /**
  * Max file size (10MB)
  */
-export const MAX_FILE_SIZE = 10 * 1024 * 1024;
+export const MAX_FILE_SIZE = 20 * 1024 * 1024;
 
 /**
  * in next 30 days for credits expiration
