@@ -18,13 +18,6 @@ const nextConfig: NextConfig = {
     // removeConsole: process.env.NODE_ENV === 'production',
   },
 
-  // Increase body size limit for file uploads (20MB)
-  experimental: {
-    serverActions: {
-      bodySizeLimit: '20mb',
-    },
-  },
-
   images: {
     // https://vercel.com/docs/image-optimization/managing-image-optimization-costs#minimizing-image-optimization-costs
     // https://nextjs.org/docs/app/api-reference/components/image#unoptimized

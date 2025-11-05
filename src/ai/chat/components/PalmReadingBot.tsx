@@ -17,6 +17,8 @@ export default function PalmReadingBot() {
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dropZoneRef = useRef<HTMLDivElement>(null);
+  const resultRef = useRef<HTMLDivElement>(null);
+  const hasScrolledRef = useRef(false);
 
   // Handle file upload
   const handleFileUpload = useCallback(async (file: File) => {
@@ -181,10 +183,43 @@ export default function PalmReadingBot() {
     setImageUrl(null);
     setPreviewUrl(null);
     setResult('');
+    hasScrolledRef.current = false;
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
   }, []);
+
+  // Reset scroll flag when analysis starts
+  useEffect(() => {
+    if (isAnalyzing) {
+      hasScrolledRef.current = false;
+    }
+  }, [isAnalyzing]);
+
+  // Auto scroll to result when it first appears
+  useEffect(() => {
+    if (
+      result &&
+      result.length > 0 &&
+      !hasScrolledRef.current &&
+      resultRef.current
+    ) {
+      // Use setTimeout to ensure the DOM is updated
+      setTimeout(() => {
+        const element = resultRef.current;
+        if (element) {
+          const elementPosition = element.getBoundingClientRect().top;
+          const offsetPosition = elementPosition + window.pageYOffset - 40; // 40px offset to show the top frame
+
+          window.scrollTo({
+            top: offsetPosition,
+            behavior: 'smooth',
+          });
+          hasScrolledRef.current = true;
+        }
+      }, 300);
+    }
+  }, [result]);
 
   return (
     <div className="space-y-8" id="upload">
@@ -298,6 +333,21 @@ export default function PalmReadingBot() {
         )}
       </div>
 
+      {/* Result Section */}
+      {result && (
+        <div
+          ref={resultRef}
+          className="mt-8 p-6 md:p-10 rounded-lg bg-purple-900/30 border border-purple-800/50 w-full"
+        >
+          <h3 className="text-xl md:text-2xl font-semibold mb-6">Your Palm Reading</h3>
+          <div className="text-base md:text-lg leading-relaxed text-foreground prose prose-base md:prose-lg max-w-none dark:prose-invert prose-headings:text-foreground prose-p:text-foreground prose-strong:text-foreground prose-ul:text-foreground prose-ol:text-foreground prose-li:text-foreground prose-headings:mb-3 prose-headings:mt-6 prose-p:mb-4 prose-p:mt-0">
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+              {result}
+            </ReactMarkdown>
+          </div>
+        </div>
+      )}
+
       {/* Tips Section */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="p-4 rounded-lg bg-muted/50 border">
@@ -325,18 +375,6 @@ export default function PalmReadingBot() {
           </p>
         </div>
       </div>
-
-      {/* Result Section */}
-      {result && (
-        <div className="mt-8 p-6 md:p-10 rounded-lg bg-purple-900/30 border border-purple-800/50 w-full">
-          <h3 className="text-xl md:text-2xl font-semibold mb-6">Your Palm Reading</h3>
-          <div className="text-base md:text-lg leading-relaxed text-foreground prose prose-base md:prose-lg max-w-none dark:prose-invert prose-headings:text-foreground prose-p:text-foreground prose-strong:text-foreground prose-ul:text-foreground prose-ol:text-foreground prose-li:text-foreground prose-headings:mb-3 prose-headings:mt-6 prose-p:mb-4 prose-p:mt-0">
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>
-              {result}
-            </ReactMarkdown>
-          </div>
-        </div>
-      )}
 
       {/* Features */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8">
