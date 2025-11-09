@@ -15,122 +15,122 @@ interface PalmReadingHomeProps {
 }
 
 export default function PalmReadingHome({ locale }: PalmReadingHomeProps) {
-  const stats = [
-    { value: '10,000+', label: 'Palm Readings' },
-    { value: '4.8/5', label: 'User Rating' },
-    { value: '98%', label: 'Accuracy Rate' },
-  ];
+  // const stats = [
+  //   { value: '10,000+', label: 'Palm Readings' },
+  //   { value: '4.8/5', label: 'User Rating' },
+  //   { value: '98%', label: 'Accuracy Rate' },
+  // ];
 
-  const testimonials = [
-    {
-      name: 'Sarah M.',
-      location: 'New York, USA',
-      content:
-        "The accuracy was incredible! The reading revealed insights about my personality that I hadn't even shared with close friends. The AI picked up on my creative nature and career path perfectly.",
-      time: '2 days ago',
-    },
-    {
-      name: 'Michael R.',
-      location: 'London, UK',
-      content:
-        'I was skeptical at first, but the detailed analysis of my life line and future predictions were spot-on. The chat feature allowed me to ask specific questions about my career path.',
-      time: '1 week ago',
-    },
-    {
-      name: 'Priya K.',
-      location: 'Mumbai, India',
-      content:
-        'Amazing technology! The reading identified my relationship patterns and gave me valuable insights about my future. The instant results and privacy protection are fantastic.',
-      time: '3 days ago',
-    },
-    {
-      name: 'David L.',
-      location: 'Toronto, Canada',
-      content:
-        'The AI analysis was thorough and detailed. It correctly identified my analytical nature and provided insights about my health line that prompted me to make positive lifestyle changes.',
-      time: '5 days ago',
-    },
-    {
-      name: 'Emma W.',
-      location: 'Sydney, Australia',
-      content:
-        'Fast, accurate, and surprisingly detailed! The reading helped me understand my emotional patterns and gave me clarity about my upcoming life decisions. Highly recommended!',
-      time: '1 day ago',
-    },
-    {
-      name: 'Carlos M.',
-      location: 'São Paulo, Brazil',
-      content:
-        'The technology is incredible! It analyzed my fate line and predicted changes in my career that actually happened weeks later. The accuracy rate is genuinely impressive.',
-      time: '4 days ago',
-    },
-  ];
+  // const testimonials = [
+  //   {
+  //     name: 'Sarah M.',
+  //     location: 'New York, USA',
+  //     content:
+  //       "The accuracy was incredible! The reading revealed insights about my personality that I hadn't even shared with close friends. The AI picked up on my creative nature and career path perfectly.",
+  //     time: '2 days ago',
+  //   },
+  //   {
+  //     name: 'Michael R.',
+  //     location: 'London, UK',
+  //     content:
+  //       'I was skeptical at first, but the detailed analysis of my life line and future predictions were spot-on. The chat feature allowed me to ask specific questions about my career path.',
+  //     time: '1 week ago',
+  //   },
+  //   {
+  //     name: 'Priya K.',
+  //     location: 'Mumbai, India',
+  //     content:
+  //       'Amazing technology! The reading identified my relationship patterns and gave me valuable insights about my future. The instant results and privacy protection are fantastic.',
+  //     time: '3 days ago',
+  //   },
+  //   {
+  //     name: 'David L.',
+  //     location: 'Toronto, Canada',
+  //     content:
+  //       'The AI analysis was thorough and detailed. It correctly identified my analytical nature and provided insights about my health line that prompted me to make positive lifestyle changes.',
+  //     time: '5 days ago',
+  //   },
+  //   {
+  //     name: 'Emma W.',
+  //     location: 'Sydney, Australia',
+  //     content:
+  //       'Fast, accurate, and surprisingly detailed! The reading helped me understand my emotional patterns and gave me clarity about my upcoming life decisions. Highly recommended!',
+  //     time: '1 day ago',
+  //   },
+  //   {
+  //     name: 'Carlos M.',
+  //     location: 'São Paulo, Brazil',
+  //     content:
+  //       'The technology is incredible! It analyzed my fate line and predicted changes in my career that actually happened weeks later. The accuracy rate is genuinely impressive.',
+  //     time: '4 days ago',
+  //   },
+  // ];
 
-  const features = [
-    {
-      icon: Shield,
-      title: '100% Secure',
-      description: 'SSL Encrypted',
-    },
-    {
-      icon: Lock,
-      title: 'Privacy First',
-      description: 'Never Stored',
-    },
-    {
-      icon: Clock,
-      title: 'Instant Results',
-      description: 'Under 30 Seconds',
-    },
-    {
-      icon: CheckCircle2,
-      title: '24/7 Support',
-      description: 'Always Available',
-    },
-  ];
+  // const features = [
+  //   {
+  //     icon: Shield,
+  //     title: '100% Secure',
+  //     description: 'SSL Encrypted',
+  //   },
+  //   {
+  //     icon: Lock,
+  //     title: 'Privacy First',
+  //     description: 'Never Stored',
+  //   },
+  //   {
+  //     icon: Clock,
+  //     title: 'Instant Results',
+  //     description: 'Under 30 Seconds',
+  //   },
+  //   {
+  //     icon: CheckCircle2,
+  //     title: '24/7 Support',
+  //     description: 'Always Available',
+  //   },
+  // ];
 
-  const steps = [
-    {
-      number: '1',
-      title: 'Capture',
-      description: "Take a clear, well-lit photo of your dominant hand's palm",
-    },
-    {
-      number: '2',
-      title: 'Analyze',
-      description: 'Our advanced AI examines your palm lines and patterns',
-    },
-    {
-      number: '3',
-      title: 'Discover',
-      description:
-        'Receive detailed insights about your personality and future',
-    },
-  ];
+  // const steps = [
+  //   {
+  //     number: '1',
+  //     title: 'Capture',
+  //     description: "Take a clear, well-lit photo of your dominant hand's palm",
+  //   },
+  //   {
+  //     number: '2',
+  //     title: 'Analyze',
+  //     description: 'Our advanced AI examines your palm lines and patterns',
+  //   },
+  //   {
+  //     number: '3',
+  //     title: 'Discover',
+  //     description:
+  //       'Receive detailed insights about your personality and future',
+  //   },
+  // ];
 
-  const specialFeatures = [
-    {
-      icon: Sparkles,
-      title: 'AI-Powered Analysis',
-      description:
-        'Advanced machine learning algorithms trained on palmistry traditions',
-    },
-    {
-      icon: Clock,
-      title: 'Instant Results',
-      description: 'Get your detailed palm reading in seconds, not hours',
-    },
-    {
-      icon: Lock,
-      title: 'Complete Privacy',
-      description: 'Your images are processed securely and never stored',
-    },
-    {
-      icon: Star,
-      title: 'Interactive Chat',
-      description: 'Ask follow-up questions about your reading',
-    },
-  ];
+  // const specialFeatures = [
+  //   {
+  //     icon: Sparkles,
+  //     title: 'AI-Powered Analysis',
+  //     description:
+  //       'Advanced machine learning algorithms trained on palmistry traditions',
+  //   },
+  //   {
+  //     icon: Clock,
+  //     title: 'Instant Results',
+  //     description: 'Get your detailed palm reading in seconds, not hours',
+  //   },
+  //   {
+  //     icon: Lock,
+  //     title: 'Complete Privacy',
+  //     description: 'Your images are processed securely and never stored',
+  //   },
+  //   {
+  //     icon: Star,
+  //     title: 'Interactive Chat',
+  //     description: 'Ask follow-up questions about your reading',
+  //   },
+  // ];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-950 via-purple-900 to-indigo-950">
@@ -158,7 +158,7 @@ export default function PalmReadingHome({ locale }: PalmReadingHomeProps) {
         </div>
 
         {/* Stats Section */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto mb-16">
+        {/* <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto mb-16">
           {stats.map((stat, index) => (
             <div
               key={index}
@@ -170,10 +170,10 @@ export default function PalmReadingHome({ locale }: PalmReadingHomeProps) {
               <div className="text-sm text-muted-foreground">{stat.label}</div>
             </div>
           ))}
-        </div>
+        </div> */}
 
         {/* Features Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto mb-16">
+        {/* <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto mb-16">
           {features.map((feature, index) => (
             <div
               key={index}
@@ -186,11 +186,11 @@ export default function PalmReadingHome({ locale }: PalmReadingHomeProps) {
               </div>
             </div>
           ))}
-        </div>
+        </div> */}
       </div>
 
       {/* Testimonials Section */}
-      <div className="bg-purple-950/20 py-16">
+      {/* <div className="bg-purple-950/20 py-16">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold mb-4">
@@ -230,10 +230,10 @@ export default function PalmReadingHome({ locale }: PalmReadingHomeProps) {
             ))}
           </div>
         </div>
-      </div>
+      </div> */}
 
       {/* How It Works Section */}
-      <div className="container mx-auto px-4 py-16">
+      {/* <div className="container mx-auto px-4 py-16">
         <div className="text-center mb-12">
           <h2 className="text-3xl md:text-4xl font-bold mb-4">
             How Palmist Works
@@ -256,10 +256,10 @@ export default function PalmReadingHome({ locale }: PalmReadingHomeProps) {
             </div>
           ))}
         </div>
-      </div>
+      </div> */}
 
       {/* What Makes Palmist Special Section */}
-      <div className="bg-purple-950/20 py-16">
+      {/* <div className="bg-purple-950/20 py-16">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold mb-4">
@@ -282,10 +282,10 @@ export default function PalmReadingHome({ locale }: PalmReadingHomeProps) {
             ))}
           </div>
         </div>
-      </div>
+      </div> */}
 
       {/* CTA Section */}
-      <div className="container mx-auto px-4 py-16">
+      {/* <div className="container mx-auto px-4 py-16">
         <div className="max-w-3xl mx-auto text-center space-y-6">
           <h2 className="text-3xl md:text-4xl font-bold">
             Ready to Discover Your Destiny?
@@ -303,7 +303,7 @@ export default function PalmReadingHome({ locale }: PalmReadingHomeProps) {
             </a>
           </div>
         </div>
-      </div>
+      </div> */}
     </div>
   );
 }
