@@ -3,12 +3,14 @@
 import { MAX_FILE_SIZE } from '@/lib/constants';
 import { uploadFileFromBrowser } from '@/storage/client';
 import { ImageIcon, Loader2, Upload, X } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { toast } from 'sonner';
 
 export default function PalmReadingBot() {
+  const t = useTranslations('PalmReadingPage');
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -27,7 +29,7 @@ export default function PalmReadingBot() {
 
       // Client-side checks
       if (file.size > MAX_FILE_SIZE) {
-        throw new Error('File size exceeds the server limit');
+        throw new Error(t('errors.fileSizeExceeded'));
       }
       const allowedTypes = [
         'image/jpeg',
@@ -36,7 +38,7 @@ export default function PalmReadingBot() {
         'image/gif',
       ];
       if (!allowedTypes.includes(file.type)) {
-        throw new Error('File type not supported');
+        throw new Error(t('errors.fileTypeNotSupported'));
       }
 
       // Create preview
@@ -53,14 +55,14 @@ export default function PalmReadingBot() {
       // Save image URL to state
       setImageUrl(url);
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Upload failed';
+      const message = err instanceof Error ? err.message : t('errors.uploadFailed');
       toast.error(message);
       setPreviewUrl(null);
       setImageUrl(null);
     } finally {
       setIsUploading(false);
     }
-  }, []);
+  }, [t]);
 
   // Handle file input change
   const handleFileChange = useCallback(
@@ -103,7 +105,7 @@ export default function PalmReadingBot() {
   // Handle analyze button click
   const handleAnalyze = useCallback(async () => {
     if (!imageUrl) {
-      toast.error('Please upload an image first');
+      toast.error(t('errors.pleaseUploadFirst'));
       return;
     }
 
@@ -129,7 +131,7 @@ export default function PalmReadingBot() {
         const errorData = await res
           .json()
           .catch(() => ({ error: 'Unknown error' }));
-        throw new Error(errorData.error || 'Failed to analyze image');
+        throw new Error(errorData.error || t('errors.analysisFailed'));
       }
 
       const reader = res.body?.getReader();
@@ -170,13 +172,13 @@ export default function PalmReadingBot() {
         }
       }
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Analysis failed';
+      const message = err instanceof Error ? err.message : t('errors.analysisFailed');
       toast.error(message);
       setResult('');
     } finally {
       setIsAnalyzing(false);
     }
-  }, [imageUrl]);
+  }, [imageUrl, t]);
 
   // Remove image
   const handleRemoveImage = useCallback(() => {
@@ -260,7 +262,7 @@ export default function PalmReadingBot() {
               <button
                 onClick={handleRemoveImage}
                 className="absolute top-2 right-2 p-2 rounded-full bg-background/80 hover:bg-background border shadow-sm transition-colors"
-                aria-label="Remove image"
+                aria-label={t('upload.removeImage')}
               >
                 <X className="size-4" />
               </button>
@@ -269,7 +271,7 @@ export default function PalmReadingBot() {
               {isUploading ? (
                 <div className="inline-flex items-center gap-2 px-6 py-3 rounded-lg font-medium">
                   <Loader2 className="size-4 animate-spin text-primary" />
-                  <span>Uploading...</span>
+                  <span>{t('upload.uploading')}</span>
                 </div>
               ) : (
                 <button
@@ -280,12 +282,12 @@ export default function PalmReadingBot() {
                   {isAnalyzing ? (
                     <>
                       <Loader2 className="size-4 animate-spin" />
-                      Analyzing your palm...
+                      {t('upload.analyzing')}
                     </>
                   ) : (
                     <>
                       <ImageIcon className="size-4" />
-                      Generate My Palm Reading
+                      {t('upload.generate')}
                     </>
                   )}
                 </button>
@@ -297,9 +299,9 @@ export default function PalmReadingBot() {
             {isUploading ? (
               <div className="flex flex-col items-center justify-center space-y-4 py-8">
                 <Loader2 className="size-12 text-primary animate-spin" />
-                <p className="text-lg font-medium">Uploading...</p>
+                <p className="text-lg font-medium">{t('upload.uploading')}</p>
                 <p className="text-sm text-muted-foreground">
-                  Please wait while we upload your image
+                  {t('upload.uploadingDescription')}
                 </p>
               </div>
             ) : (
@@ -311,10 +313,10 @@ export default function PalmReadingBot() {
                 </div>
                 <div>
                   <p className="text-lg font-medium mb-2">
-                    Drop your palm photo here or click to browse
+                    {t('upload.title')}
                   </p>
                   <p className="text-sm text-muted-foreground">
-                    Supports JPG, PNG, GIF up to {MAX_FILE_SIZE / 1024 / 1024}MB
+                    {t('upload.description', { size: MAX_FILE_SIZE / 1024 / 1024 })}
                   </p>
                 </div>
                 <button
@@ -325,7 +327,7 @@ export default function PalmReadingBot() {
                   disabled={isUploading}
                   className="inline-flex items-center gap-2 px-6 py-2 bg-muted hover:bg-muted/80 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
                 >
-                  Browse Files
+                  {t('upload.button')}
                 </button>
               </>
             )}
@@ -339,7 +341,7 @@ export default function PalmReadingBot() {
           ref={resultRef}
           className="mt-8 p-6 md:p-10 rounded-lg bg-purple-900/30 border border-purple-800/50 w-full"
         >
-          <h3 className="text-xl md:text-2xl font-semibold mb-6">Your Palm Reading</h3>
+          <h3 className="text-xl md:text-2xl font-semibold mb-6">{t('result.title')}</h3>
           <div className="text-base md:text-lg leading-relaxed text-foreground prose prose-base md:prose-lg max-w-none dark:prose-invert prose-headings:text-foreground prose-p:text-foreground prose-strong:text-foreground prose-ul:text-foreground prose-ol:text-foreground prose-li:text-foreground prose-headings:mb-3 prose-headings:mt-6 prose-p:mb-4 prose-p:mt-0">
             <ReactMarkdown remarkPlugins={[remarkGfm]}>
               {result}
@@ -351,27 +353,27 @@ export default function PalmReadingBot() {
       {/* Tips Section */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="p-4 rounded-lg bg-muted/50 border">
-          <p className="text-sm font-medium mb-1">Tip 1:</p>
+          <p className="text-sm font-medium mb-1">{t('tips.tip1.title')}</p>
           <p className="text-sm text-muted-foreground">
-            Use natural lighting for the clearest palm lines
+            {t('tips.tip1.description')}
           </p>
         </div>
         <div className="p-4 rounded-lg bg-muted/50 border">
-          <p className="text-sm font-medium mb-1">Tip 2:</p>
+          <p className="text-sm font-medium mb-1">{t('tips.tip2.title')}</p>
           <p className="text-sm text-muted-foreground">
-            Keep your dominant hand flat and fingers slightly spread
+            {t('tips.tip2.description')}
           </p>
         </div>
         <div className="p-4 rounded-lg bg-muted/50 border">
-          <p className="text-sm font-medium mb-1">Tip 3:</p>
+          <p className="text-sm font-medium mb-1">{t('tips.tip3.title')}</p>
           <p className="text-sm text-muted-foreground">
-            Hold the camera steady and avoid shadows
+            {t('tips.tip3.description')}
           </p>
         </div>
         <div className="p-4 rounded-lg bg-muted/50 border">
-          <p className="text-sm font-medium mb-1">Tip 4:</p>
+          <p className="text-sm font-medium mb-1">{t('tips.tip4.title')}</p>
           <p className="text-sm text-muted-foreground">
-            Make sure all major palm lines are visible
+            {t('tips.tip4.description')}
           </p>
         </div>
       </div>
@@ -379,16 +381,16 @@ export default function PalmReadingBot() {
       {/* Features */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8">
         <div className="text-center p-4 rounded-lg bg-muted/50 border">
-          <p className="text-sm font-medium mb-1">Instant Results</p>
-          <p className="text-xs text-muted-foreground">Under 30 seconds</p>
+          <p className="text-sm font-medium mb-1">{t('features.instant.title')}</p>
+          <p className="text-xs text-muted-foreground">{t('features.instant.description')}</p>
         </div>
         <div className="text-center p-4 rounded-lg bg-muted/50 border">
-          <p className="text-sm font-medium mb-1">100% Private</p>
-          <p className="text-xs text-muted-foreground">Never stored</p>
+          <p className="text-sm font-medium mb-1">{t('features.private.title')}</p>
+          <p className="text-xs text-muted-foreground">{t('features.private.description')}</p>
         </div>
         <div className="text-center p-4 rounded-lg bg-muted/50 border">
-          <p className="text-sm font-medium mb-1">AI Powered</p>
-          <p className="text-xs text-muted-foreground">Advanced analysis</p>
+          <p className="text-sm font-medium mb-1">{t('features.ai.title')}</p>
+          <p className="text-xs text-muted-foreground">{t('features.ai.description')}</p>
         </div>
       </div>
     </div>

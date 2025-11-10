@@ -12,18 +12,18 @@ export async function generateMetadata({
 }): Promise<Metadata | undefined> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: 'Metadata' });
-  const pt = await getTranslations({ locale, namespace: 'AIChatPage' });
+  const pt = await getTranslations({ locale, namespace: 'PalmReadingPage' });
 
   return constructMetadata({
-    title: 'Palm Reading | ' + t('title'),
-    description: 'AI-Powered Palm Reading - Discover your destiny',
+    title: pt('title') + ' | ' + t('title'),
+    description: pt('description'),
     locale,
     pathname: '/ai/palm-reading',
   });
 }
 
 export default async function PalmReadingPage() {
-  const t = await getTranslations('AIChatPage');
+  const t = await getTranslations('PalmReadingPage');
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/50">
@@ -31,16 +31,14 @@ export default async function PalmReadingPage() {
         {/* Header Section */}
         <div className="text-center space-y-6 mb-12">
           <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
-            Discover Your Destiny
+            {t('title')}
           </h1>
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium">
             <ZapIcon className="size-4" />
-            AI-Powered Palm Reading
+            {t('subtitle')}
           </div>
           <p className="text-muted-foreground max-w-2xl mx-auto text-lg">
-            Unlock the ancient secrets hidden in your palm lines with
-            cutting-edge artificial intelligence. Get instant insights about
-            your personality, relationships, career, and future.
+            {t('description')}
           </p>
         </div>
 

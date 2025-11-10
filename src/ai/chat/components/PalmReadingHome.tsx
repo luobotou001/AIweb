@@ -8,6 +8,7 @@ import {
   Sparkles,
   Star,
 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import PalmReadingBot from './PalmReadingBot';
 
 interface PalmReadingHomeProps {
@@ -15,6 +16,7 @@ interface PalmReadingHomeProps {
 }
 
 export default function PalmReadingHome({ locale }: PalmReadingHomeProps) {
+  const t = useTranslations('PalmReadingPage');
   // const stats = [
   //   { value: '10,000+', label: 'Palm Readings' },
   //   { value: '4.8/5', label: 'User Rating' },
@@ -138,15 +140,13 @@ export default function PalmReadingHome({ locale }: PalmReadingHomeProps) {
       <div className="container mx-auto px-4 py-12 md:py-20">
         <div className="text-center space-y-6 mb-12">
           <h1 className="text-4xl md:text-6xl font-bold tracking-tight">
-            Discover Your Destiny
+            {t('title')}
           </h1>
           <h2 className="text-2xl md:text-3xl font-semibold text-muted-foreground">
-            AI-Powered Palm Reading
+            {t('subtitle')}
           </h2>
           <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto">
-            Unlock the ancient secrets hidden in your palm lines with
-            cutting-edge artificial intelligence. Get instant insights about
-            your personality, relationships, career, and future.
+            {t('description')}
           </p>
         </div>
 

@@ -44,7 +44,7 @@ export default async function AboutPage() {
                 <Avatar className="size-32 p-0.5">
                   <AvatarImage
                     className="rounded-full border-4 border-gray-200"
-                    src="/logo.png"
+                    src={websiteConfig.metadata.images?.logoLight ?? '/logo.png'}
                     alt="Avatar"
                   />
                   <AvatarFallback>

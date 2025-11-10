@@ -1,8 +1,8 @@
 {
   "Metadata": {
     "name": "PalmReading",
-    "title": "PalmReading - Discover Your Destiny",
-    "description": "AI-Powered Palm Reading - Unlock the ancient secrets hidden in your palm lines with cutting-edge artificial intelligence. Get instant insights about your personality, relationships, career, and future."
+    "title": "PalmReading - 发现你的命运",
+    "description": "AI 驱动的掌纹阅读 - 使用尖端人工智能解锁隐藏在您掌纹中的古老秘密。即时了解您的性格、人际关系、职业和未来。"
   },
   "Common": {
     "premium": "付费文章",
@@ -1101,5 +1101,63 @@
   "AIAudioPage": {
     "title": "AI 音频",
     "description": "MkSaaS 让您在几天内轻松构建您的 AI SaaS，简单且毫不费力"
+  },
+  "PalmReadingPage": {
+    "title": "发现你的命运",
+    "subtitle": "AI 驱动的掌纹阅读",
+    "description": "使用尖端人工智能解锁隐藏在您掌纹中的古老秘密。即时了解您的性格、人际关系、职业和未来。",
+    "upload": {
+      "title": "将您的掌纹照片拖放到此处或点击浏览",
+      "description": "支持 JPG、PNG、GIF，最大 {size}MB",
+      "button": "浏览文件",
+      "uploading": "上传中...",
+      "uploadingDescription": "请稍候，我们正在上传您的图片",
+      "analyzing": "正在分析您的掌纹...",
+      "generate": "生成我的掌纹阅读",
+      "pleaseUpload": "请先上传图片",
+      "removeImage": "移除图片"
+    },
+    "result": {
+      "title": "您的掌纹阅读"
+    },
+    "tips": {
+      "tip1": {
+        "title": "提示 1：",
+        "description": "使用自然光线以获得最清晰的掌纹线条"
+      },
+      "tip2": {
+        "title": "提示 2：",
+        "description": "保持您的主要手平坦，手指稍微分开"
+      },
+      "tip3": {
+        "title": "提示 3：",
+        "description": "保持相机稳定并避免阴影"
+      },
+      "tip4": {
+        "title": "提示 4：",
+        "description": "确保所有主要掌纹线条都可见"
+      }
+    },
+    "features": {
+      "instant": {
+        "title": "即时结果",
+        "description": "30 秒内"
+      },
+      "private": {
+        "title": "100% 隐私",
+        "description": "永不存储"
+      },
+      "ai": {
+        "title": "AI 驱动",
+        "description": "高级分析"
+      }
+    },
+    "errors": {
+      "fileSizeExceeded": "文件大小超过服务器限制",
+      "fileTypeNotSupported": "不支持的文件类型",
+      "uploadFailed": "上传失败",
+      "analysisFailed": "分析失败",
+      "pleaseUploadFirst": "请先上传图片"
+    }
   }
 }

@@ -1101,5 +1101,63 @@
   "AIAudioPage": {
     "title": "AI Audio",
     "description": "MkSaaS lets you make AI SaaS in days, simply and effortlessly"
+  },
+  "PalmReadingPage": {
+    "title": "Discover Your Destiny",
+    "subtitle": "AI-Powered Palm Reading",
+    "description": "Unlock the ancient secrets hidden in your palm lines with cutting-edge artificial intelligence. Get instant insights about your personality, relationships, career, and future.",
+    "upload": {
+      "title": "Drop your palm photo here or click to browse",
+      "description": "Supports JPG, PNG, GIF up to {size}MB",
+      "button": "Browse Files",
+      "uploading": "Uploading...",
+      "uploadingDescription": "Please wait while we upload your image",
+      "analyzing": "Analyzing your palm...",
+      "generate": "Generate My Palm Reading",
+      "pleaseUpload": "Please upload an image first",
+      "removeImage": "Remove image"
+    },
+    "result": {
+      "title": "Your Palm Reading"
+    },
+    "tips": {
+      "tip1": {
+        "title": "Tip 1:",
+        "description": "Use natural lighting for the clearest palm lines"
+      },
+      "tip2": {
+        "title": "Tip 2:",
+        "description": "Keep your dominant hand flat and fingers slightly spread"
+      },
+      "tip3": {
+        "title": "Tip 3:",
+        "description": "Hold the camera steady and avoid shadows"
+      },
+      "tip4": {
+        "title": "Tip 4:",
+        "description": "Make sure all major palm lines are visible"
+      }
+    },
+    "features": {
+      "instant": {
+        "title": "Instant Results",
+        "description": "Under 30 seconds"
+      },
+      "private": {
+        "title": "100% Private",
+        "description": "Never stored"
+      },
+      "ai": {
+        "title": "AI Powered",
+        "description": "Advanced analysis"
+      }
+    },
+    "errors": {
+      "fileSizeExceeded": "File size exceeds the server limit",
+      "fileTypeNotSupported": "File type not supported",
+      "uploadFailed": "Upload failed",
+      "analysisFailed": "Analysis failed",
+      "pleaseUploadFirst": "Please upload an image first"
+    }
   }
 }
