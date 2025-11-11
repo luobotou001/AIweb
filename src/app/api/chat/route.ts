@@ -1,7 +1,9 @@
+import { getLocaleFromRequest } from '@/lib/auth';
 import { createDeepSeek } from '@ai-sdk/deepseek';
 import { createOpenAI } from '@ai-sdk/openai';
 import { createOpenRouter } from '@openrouter/ai-sdk-provider';
 import { type UIMessage, convertToModelMessages, streamText } from 'ai';
+import type { Locale } from 'next-intl';
 
 // Allow streaming responses up to 5 minutes (Coze API may take time for image analysis)
 export const maxDuration = 300;
@@ -11,12 +13,12 @@ export const maxDuration = 300;
  */
 async function callCozeAPI(
   input: string | null,
-  imageUrl: string | null
+  imageUrl: string | null,
+  locale: Locale = 'en'
 ): Promise<Response> {
   const apiKey = process.env.COZE_API_KEY;
   const workflowId = process.env.COZE_WORKFLOW_ID;
   const userName = process.env.COZE_USER_NAME;
-  const userInput = process.env.COZE_USER_INPUT; // 从环境变量读取input
 
   if (!apiKey || !workflowId || !userName) {
     throw new Error(
@@ -24,8 +26,25 @@ async function callCozeAPI(
     );
   }
 
-  // 如果环境变量中没有设置COZE_USER_INPUT，使用传入的input（向后兼容）
-  const finalInput = userInput || input?.trim() || '请总结图片内容';
+  // 使用固定的提示词，让 Coze 返回原始回复（不要求特定语言）
+  // 我们会在后续步骤中根据用户语言进行翻译
+  const defaultInput =
+    process.env.COZE_USER_INPUT ||
+    '请分析这张手相图片，提供详细的手相分析。包括性格、人际关系、职业和未来方面的见解。';
+  const finalInput = input?.trim() || defaultInput;
+
+  // 将 locale 映射为 Coze API 需要的语言值
+  // 'zh' -> '中文', 'en' -> '英文', 默认为 '英文'
+  const cozeLanguage = locale === 'zh' ? '中文' : '英文';
+
+  console.log(
+    'Palm reading request - locale:',
+    locale,
+    'cozeLanguage:',
+    cozeLanguage,
+    'finalInput:',
+    finalInput.substring(0, 100)
+  );
 
   // Build request body according to Coze API format:
   // {
@@ -33,7 +52,8 @@ async function callCozeAPI(
   //   "parameters": {
   //     "user_name": "...",
   //     "input": "用户输入的文本（从环境变量读取）",
-  //     "image": "https://...图片URL..."
+  //     "image": "https://...图片URL...",
+  //     "Language": "中文" | "英文"  // 注意：Coze API 要求首字母大写
   //   }
   // }
   const requestBody: {
@@ -42,12 +62,14 @@ async function callCozeAPI(
       user_name: string;
       input: string;
       image?: string;
+      Language: string; // Coze API 要求参数名为 "Language"（首字母大写）
     };
   } = {
     workflow_id: workflowId,
     parameters: {
       user_name: userName,
       input: finalInput, // 优先使用环境变量中的input
+      Language: cozeLanguage, // 根据用户选择的语言模式设置：'中文' 或 '英文'，默认为 '英文'
     },
   };
 
@@ -56,6 +78,9 @@ async function callCozeAPI(
   if (imageUrl) {
     requestBody.parameters.image = imageUrl;
   }
+
+  // 调试：打印请求体，确认 language 参数已包含
+  console.log('Coze API 请求体:', JSON.stringify(requestBody, null, 2));
 
   const cozeResponse = await fetch(
     'https://api.coze.cn/v1/workflow/stream_run',
@@ -86,6 +111,9 @@ async function callCozeAPI(
         return;
       }
 
+      // Store locale in closure for use in error messages and translation
+      const currentLocale: Locale = locale;
+
       // Send message start marker
       const messageStart = {
         type: 'message-start',
@@ -101,6 +129,7 @@ async function callCozeAPI(
 
       let buffer = '';
       let hasText = false;
+      let fullText = ''; // 收集完整的 Coze 回复文本
 
       try {
         while (true) {
@@ -144,18 +173,19 @@ async function callCozeAPI(
 
               // Check for errors first
               if (data.error_message || data.error_code) {
-                const errorMsg = data.error_message || `Error code: ${data.error_code}`;
+                const errorMsg =
+                  data.error_message || `Error code: ${data.error_code}`;
                 console.log('Coze API error detected:', errorMsg);
-                
-                // Send user-friendly error message
-                hasText = true;
-                const errorText = '服务运行繁忙，请稍后重试';
-                const errorChunk = {
-                  type: 'text-delta',
-                  textDelta: errorText,
+
+                // Store error message for translation
+                const errorMessages: Record<Locale, string> = {
+                  en: 'Service is busy, please try again later.',
+                  zh: '服务运行繁忙，请稍后重试',
                 };
-                const errorLine = `0:${JSON.stringify(errorChunk)}\n`;
-                controller.enqueue(encoder.encode(errorLine));
+                const errorText =
+                  errorMessages[currentLocale] || errorMessages.en;
+                fullText = errorText;
+                hasText = true;
                 continue; // Skip to next line
               }
 
@@ -223,60 +253,24 @@ async function callCozeAPI(
 
               if (text) {
                 hasText = true;
-                // Split text into smaller chunks for better streaming
-                // Make chunks small to increase the perceived streaming effect
-                const chunkSize = 40;
-                const totalChunks = Math.ceil(text.length / chunkSize);
-                // Calculate delay to complete streaming within ~3 seconds
-                // Total streaming duration: 3000ms, distribute evenly across chunks
-                const targetDuration = 3000; // 3 seconds
-                const delayPerChunk = Math.floor(targetDuration / totalChunks);
-                // Ensure minimum delay of 10ms for visible effect, max 200ms to avoid feeling slow
-                const actualDelay = Math.max(10, Math.min(delayPerChunk, 200));
-                
-                for (let i = 0; i < text.length; i += chunkSize) {
-                  const textChunk = text.slice(i, i + chunkSize);
-                  const chunk = {
-                    type: 'text-delta',
-                    textDelta: textChunk,
-                  };
-                  const line = `0:${JSON.stringify(chunk)}\n`;
-                  const encoded = encoder.encode(line);
-                  controller.enqueue(encoded);
-                  // Add delay between chunks to create smooth streaming effect
-                  // Last chunk doesn't need delay
-                  if (i + chunkSize < text.length) {
-                    // eslint-disable-next-line no-await-in-loop
-                    await new Promise((r) => setTimeout(r, actualDelay));
-                  }
-                }
+                // 收集完整的文本，稍后进行翻译
+                fullText += text;
                 console.log(
-                  'Sent text-delta chunks, total length:',
+                  '收集到文本片段，长度:',
                   text.length,
-                  'chunks:',
-                  totalChunks,
-                  'delay per chunk:',
-                  actualDelay,
-                  'ms, estimated duration:',
-                  totalChunks * actualDelay,
-                  'ms',
-                  'preview:',
-                  text.substring(0, 100)
+                  '累计长度:',
+                  fullText.length
                 );
               } else {
                 console.log('No text extracted from:', JSON.stringify(data));
               }
             } catch (parseError) {
               console.error('Error parsing line:', line, parseError);
-              // If not JSON, treat as plain text
+              // If not JSON, treat as plain text and collect it
               const text = line.trim();
               if (text && !text.startsWith('data:')) {
-                const chunk = {
-                  type: 'text-delta',
-                  textDelta: text,
-                };
-                const lineData = `0:${JSON.stringify(chunk)}\n`;
-                controller.enqueue(encoder.encode(lineData));
+                fullText += text;
+                hasText = true;
               }
             }
           }
@@ -288,40 +282,178 @@ async function callCozeAPI(
             const data = JSON.parse(buffer.trim());
             // Check for errors in buffer
             if (data.error_message || data.error_code) {
-              const errorText = '服务运行繁忙，请稍后重试';
-              const errorChunk = {
-                type: 'text-delta',
-                textDelta: errorText,
+              const errorMessages: Record<Locale, string> = {
+                en: 'Service is busy, please try again later.',
+                zh: '服务运行繁忙，请稍后重试',
               };
-              const errorLine = `0:${JSON.stringify(errorChunk)}\n`;
-              controller.enqueue(encoder.encode(errorLine));
+              const errorText =
+                errorMessages[currentLocale] || errorMessages.en;
+              fullText = errorText;
               hasText = true;
             } else if (data.content && typeof data.content === 'string') {
               const innerData = JSON.parse(data.content);
               if (innerData.output && typeof innerData.output === 'string') {
-                const chunk = {
-                  type: 'text-delta',
-                  textDelta: innerData.output,
-                };
-                const line = `0:${JSON.stringify(chunk)}\n`;
-                controller.enqueue(encoder.encode(line));
+                fullText += innerData.output;
                 hasText = true;
               }
             } else if (data.data && typeof data.data === 'string') {
               const innerData = JSON.parse(data.data);
               if (innerData.output && typeof innerData.output === 'string') {
-                const chunk = {
-                  type: 'text-delta',
-                  textDelta: innerData.output,
-                };
-                const line = `0:${JSON.stringify(chunk)}\n`;
-                controller.enqueue(encoder.encode(line));
+                fullText += innerData.output;
                 hasText = true;
               }
             }
           } catch (e) {
             // Ignore parse errors for buffer
           }
+        }
+
+        // 收集完所有文本后，根据用户语言进行翻译
+        console.log('=== 检查是否需要翻译 ===');
+        console.log(
+          'hasText:',
+          hasText,
+          'fullText length:',
+          fullText.length,
+          'fullText trimmed length:',
+          fullText.trim().length
+        );
+
+        if (hasText && fullText.trim()) {
+          try {
+            let finalText = fullText.trim();
+
+            console.log('=== 开始翻译处理 ===');
+            console.log('1. Coze 原始回复长度:', finalText.length);
+            console.log(
+              '2. Coze 原始回复前200字符:',
+              finalText.substring(0, 200)
+            );
+
+            // 步骤1: 检测 Coze 回复的语言（中文还是英文）
+            const hasChinese = /[\u4e00-\u9fa5]/.test(finalText);
+            const cozeLanguage = hasChinese ? 'zh' : 'en';
+            console.log(
+              '3. Coze 回复语言检测:',
+              cozeLanguage,
+              '(hasChinese:',
+              hasChinese,
+              ')'
+            );
+
+            // 步骤2: 获取用户选择的语言
+            const userLanguage = currentLocale; // 'zh' 或 'en'
+            console.log('4. 用户选择的语言:', userLanguage);
+
+            // 步骤3: 如果 Coze 回复的语言与用户选择的语言不一致，进行翻译
+            const needsTranslation = cozeLanguage !== userLanguage;
+            console.log(
+              '5. 是否需要翻译:',
+              needsTranslation,
+              '(Coze:',
+              cozeLanguage,
+              'vs 用户:',
+              userLanguage,
+              ')'
+            );
+
+            if (needsTranslation) {
+              console.log(
+                '6. 开始翻译，从',
+                cozeLanguage,
+                '翻译到',
+                userLanguage
+              );
+
+              // 使用 AI SDK 进行翻译
+              const translationModel = createOpenAI({
+                apiKey: process.env.OPENAI_API_KEY,
+              }).chat('gpt-4o-mini');
+
+              // 根据翻译方向设置提示词
+              const translationPrompt =
+                userLanguage === 'zh'
+                  ? `请将以下英文手相分析翻译成中文，保持专业术语和格式不变，保持原有的结构和段落格式：\n\n${finalText}`
+                  : `Please translate the following Chinese palm reading analysis to English, keeping professional terms and format unchanged, maintaining the original structure and paragraph format:\n\n${finalText}`;
+
+              console.log(
+                '7. 翻译提示词前100字符:',
+                translationPrompt.substring(0, 100)
+              );
+
+              const translationResult = await streamText({
+                model: translationModel,
+                messages: [
+                  {
+                    role: 'user',
+                    content: translationPrompt,
+                  },
+                ],
+              });
+
+              // 收集翻译结果
+              let translatedText = '';
+              for await (const chunk of translationResult.textStream) {
+                translatedText += chunk;
+              }
+
+              finalText = translatedText || finalText;
+              console.log('8. 翻译完成，翻译后长度:', finalText.length);
+              console.log('9. 翻译后前200字符:', finalText.substring(0, 200));
+            } else {
+              console.log('6. 不需要翻译，直接使用 Coze 原始回复');
+            }
+
+            // 步骤4: 流式返回最终文本（翻译后的或原始的）
+            console.log(
+              '10. 开始流式返回文本，最终文本长度:',
+              finalText.length
+            );
+            const chunkSize = 40;
+            const totalChunks = Math.ceil(finalText.length / chunkSize);
+            const targetDuration = 3000;
+            const delayPerChunk = Math.floor(targetDuration / totalChunks);
+            const actualDelay = Math.max(10, Math.min(delayPerChunk, 200));
+
+            for (let i = 0; i < finalText.length; i += chunkSize) {
+              const textChunk = finalText.slice(i, i + chunkSize);
+              const chunk = {
+                type: 'text-delta',
+                textDelta: textChunk,
+              };
+              const line = `0:${JSON.stringify(chunk)}\n`;
+              const encoded = encoder.encode(line);
+              controller.enqueue(encoded);
+              if (i + chunkSize < finalText.length) {
+                // eslint-disable-next-line no-await-in-loop
+                await new Promise((r) => setTimeout(r, actualDelay));
+              }
+            }
+
+            console.log('11. 流式返回完成，共发送', totalChunks, '个块');
+            console.log('=== 翻译处理完成 ===');
+          } catch (translationError) {
+            console.error('翻译错误:', translationError);
+            // 如果翻译失败，返回原始文本
+            console.log('翻译失败，返回 Coze 原始回复');
+            const chunkSize = 40;
+            for (let i = 0; i < fullText.length; i += chunkSize) {
+              const textChunk = fullText.slice(i, i + chunkSize);
+              const chunk = {
+                type: 'text-delta',
+                textDelta: textChunk,
+              };
+              const line = `0:${JSON.stringify(chunk)}\n`;
+              controller.enqueue(encoder.encode(line));
+            }
+          }
+        } else {
+          console.log(
+            '没有收集到文本，hasText:',
+            hasText,
+            'fullText length:',
+            fullText.length
+          );
         }
       } catch (error) {
         console.error('Stream error:', error);
@@ -338,7 +470,11 @@ async function callCozeAPI(
         // If no text was sent (and no error message), send an error message
         if (!hasText) {
           console.log('No text received, sending error message');
-          const errorText = '服务运行繁忙，请稍后重试';
+          const errorMessages: Record<Locale, string> = {
+            en: 'Service is busy, please try again later.',
+            zh: '服务运行繁忙，请稍后重试',
+          };
+          const errorText = errorMessages[currentLocale] || errorMessages.en;
           const errorChunk = {
             type: 'text-delta',
             textDelta: errorText,
@@ -406,19 +542,33 @@ export async function POST(req: Request) {
     model,
     webSearch,
     imageUrl,
+    locale: requestLocale,
   }: {
     messages: UIMessage[];
     model: string;
     webSearch: boolean;
     imageUrl?: string | null;
+    locale?: Locale;
   } = await req.json();
+
+  // Get user's locale from request body first, fallback to cookie
+  const locale = requestLocale || getLocaleFromRequest(req);
+
+  console.log(
+    'Chat API - locale from request:',
+    requestLocale,
+    'locale from cookie:',
+    getLocaleFromRequest(req),
+    'final locale:',
+    locale
+  );
 
   // Handle PalmReading (Coze API) model separately
   if (model === 'palmreading') {
     // 如果只上传了图片，不需要用户输入文本（从环境变量读取）
     // 如果同时有messages和imageUrl，优先使用messages中的文本
     let userInput: string | null = null;
-    
+
     if (messages && messages.length > 0) {
       // Get the last user message
       const lastMessage = messages[messages.length - 1];
@@ -437,16 +587,19 @@ export async function POST(req: Request) {
 
     // 如果没有图片URL，必须有用户输入
     if (!imageUrl && !userInput) {
-      return new Response(JSON.stringify({ error: 'Either image or user input is required' }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' },
-      });
+      return new Response(
+        JSON.stringify({ error: 'Either image or user input is required' }),
+        {
+          status: 400,
+          headers: { 'Content-Type': 'application/json' },
+        }
+      );
     }
 
     // Use imageUrl from body parameter (uploaded via Cloudflare storage)
-    // 如果userInput为空，callCozeAPI会从环境变量读取
+    // 如果userInput为空，callCozeAPI会根据语言设置默认提示词
     try {
-      return await callCozeAPI(userInput || null, imageUrl || null);
+      return await callCozeAPI(userInput || null, imageUrl || null, locale);
     } catch (error) {
       console.error('Coze API error:', error);
       // Return error in AI SDK stream format
@@ -468,10 +621,10 @@ export async function POST(req: Request) {
             encoder.encode(`0:${JSON.stringify(messageStart)}\n`)
           );
 
-          // Send error as text-delta
+          // Send error as text-delta (locale will be determined from request context)
           const errorChunk = {
             type: 'text-delta',
-            textDelta: `错误: ${errorMessage}`,
+            textDelta: errorMessage,
           };
           controller.enqueue(
             encoder.encode(`0:${JSON.stringify(errorChunk)}\n`)

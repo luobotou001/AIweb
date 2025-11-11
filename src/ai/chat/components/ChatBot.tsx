@@ -36,6 +36,7 @@ import { MAX_FILE_SIZE } from '@/lib/constants';
 import { uploadFileFromBrowser } from '@/storage/client';
 import { useChat } from '@ai-sdk/react';
 import { GlobeIcon, ImageIcon } from 'lucide-react';
+import { useLocale } from 'next-intl';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -55,6 +56,7 @@ const models = [
 ];
 
 export default function ChatBot() {
+  const locale = useLocale();
   const [input, setInput] = useState('');
   const [model, setModel] = useState<string>(models[0].value);
   const [webSearch, setWebSearch] = useState(false);
@@ -131,6 +133,7 @@ export default function ChatBot() {
           model,
           webSearch,
           imageUrl: currentImageUrl,
+          locale: locale, // 传递用户的语言设置
         });
         const res = await fetch('/api/chat', {
           method: 'POST',

@@ -3,7 +3,7 @@
 import { MAX_FILE_SIZE } from '@/lib/constants';
 import { uploadFileFromBrowser } from '@/storage/client';
 import { ImageIcon, Loader2, Upload, X } from 'lucide-react';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -11,6 +11,7 @@ import { toast } from 'sonner';
 
 export default function PalmReadingBot() {
   const t = useTranslations('PalmReadingPage');
+  const locale = useLocale();
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -119,6 +120,7 @@ export default function PalmReadingBot() {
         model: 'palmreading',
         webSearch: false,
         imageUrl: imageUrl,
+        locale: locale, // 传递用户的语言设置
       });
 
       const res = await fetch('/api/chat', {
