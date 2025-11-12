@@ -26,8 +26,6 @@ async function callCozeAPI(
     );
   }
 
-  // 使用固定的提示词，让 Coze 返回原始回复（不要求特定语言）
-  // 我们会在后续步骤中根据用户语言进行翻译
   const defaultInput =
     process.env.COZE_USER_INPUT ||
     '请分析这张手相图片，提供详细的手相分析。包括性格、人际关系、职业和未来方面的见解。';
@@ -111,7 +109,7 @@ async function callCozeAPI(
         return;
       }
 
-      // Store locale in closure for use in error messages and translation
+      // Store locale in closure for use in error messages
       const currentLocale: Locale = locale;
 
       // Send message start marker
@@ -129,7 +127,6 @@ async function callCozeAPI(
 
       let buffer = '';
       let hasText = false;
-      let fullText = ''; // 收集完整的 Coze 回复文本
 
       try {
         while (true) {
@@ -177,15 +174,21 @@ async function callCozeAPI(
                   data.error_message || `Error code: ${data.error_code}`;
                 console.log('Coze API error detected:', errorMsg);
 
-                // Store error message for translation
+                // Store error message
                 const errorMessages: Record<Locale, string> = {
                   en: 'Service is busy, please try again later.',
                   zh: '服务运行繁忙，请稍后重试',
                 };
                 const errorText =
                   errorMessages[currentLocale] || errorMessages.en;
-                fullText = errorText;
                 hasText = true;
+                // 直接发送错误消息
+                const errorChunk = {
+                  type: 'text-delta',
+                  textDelta: errorText,
+                };
+                const errorLine = `0:${JSON.stringify(errorChunk)}\n`;
+                controller.enqueue(encoder.encode(errorLine));
                 continue; // Skip to next line
               }
 
@@ -253,24 +256,29 @@ async function callCozeAPI(
 
               if (text) {
                 hasText = true;
-                // 收集完整的文本，稍后进行翻译
-                fullText += text;
-                console.log(
-                  '收集到文本片段，长度:',
-                  text.length,
-                  '累计长度:',
-                  fullText.length
-                );
+                // 直接流式返回文本，不进行翻译
+                const chunk = {
+                  type: 'text-delta',
+                  textDelta: text,
+                };
+                const line = `0:${JSON.stringify(chunk)}\n`;
+                controller.enqueue(encoder.encode(line));
+                console.log('Sent text chunk, length:', text.length);
               } else {
                 console.log('No text extracted from:', JSON.stringify(data));
               }
             } catch (parseError) {
               console.error('Error parsing line:', line, parseError);
-              // If not JSON, treat as plain text and collect it
+              // If not JSON, treat as plain text and send it directly
               const text = line.trim();
               if (text && !text.startsWith('data:')) {
-                fullText += text;
                 hasText = true;
+                const chunk = {
+                  type: 'text-delta',
+                  textDelta: text,
+                };
+                const line = `0:${JSON.stringify(chunk)}\n`;
+                controller.enqueue(encoder.encode(line));
               }
             }
           }
@@ -288,172 +296,39 @@ async function callCozeAPI(
               };
               const errorText =
                 errorMessages[currentLocale] || errorMessages.en;
-              fullText = errorText;
               hasText = true;
+              const errorChunk = {
+                type: 'text-delta',
+                textDelta: errorText,
+              };
+              const errorLine = `0:${JSON.stringify(errorChunk)}\n`;
+              controller.enqueue(encoder.encode(errorLine));
             } else if (data.content && typeof data.content === 'string') {
               const innerData = JSON.parse(data.content);
               if (innerData.output && typeof innerData.output === 'string') {
-                fullText += innerData.output;
                 hasText = true;
+                const chunk = {
+                  type: 'text-delta',
+                  textDelta: innerData.output,
+                };
+                const line = `0:${JSON.stringify(chunk)}\n`;
+                controller.enqueue(encoder.encode(line));
               }
             } else if (data.data && typeof data.data === 'string') {
               const innerData = JSON.parse(data.data);
               if (innerData.output && typeof innerData.output === 'string') {
-                fullText += innerData.output;
                 hasText = true;
+                const chunk = {
+                  type: 'text-delta',
+                  textDelta: innerData.output,
+                };
+                const line = `0:${JSON.stringify(chunk)}\n`;
+                controller.enqueue(encoder.encode(line));
               }
             }
           } catch (e) {
             // Ignore parse errors for buffer
           }
-        }
-
-        // 收集完所有文本后，根据用户语言进行翻译
-        console.log('=== 检查是否需要翻译 ===');
-        console.log(
-          'hasText:',
-          hasText,
-          'fullText length:',
-          fullText.length,
-          'fullText trimmed length:',
-          fullText.trim().length
-        );
-
-        if (hasText && fullText.trim()) {
-          try {
-            let finalText = fullText.trim();
-
-            console.log('=== 开始翻译处理 ===');
-            console.log('1. Coze 原始回复长度:', finalText.length);
-            console.log(
-              '2. Coze 原始回复前200字符:',
-              finalText.substring(0, 200)
-            );
-
-            // 步骤1: 检测 Coze 回复的语言（中文还是英文）
-            const hasChinese = /[\u4e00-\u9fa5]/.test(finalText);
-            const cozeLanguage = hasChinese ? 'zh' : 'en';
-            console.log(
-              '3. Coze 回复语言检测:',
-              cozeLanguage,
-              '(hasChinese:',
-              hasChinese,
-              ')'
-            );
-
-            // 步骤2: 获取用户选择的语言
-            const userLanguage = currentLocale; // 'zh' 或 'en'
-            console.log('4. 用户选择的语言:', userLanguage);
-
-            // 步骤3: 如果 Coze 回复的语言与用户选择的语言不一致，进行翻译
-            const needsTranslation = cozeLanguage !== userLanguage;
-            console.log(
-              '5. 是否需要翻译:',
-              needsTranslation,
-              '(Coze:',
-              cozeLanguage,
-              'vs 用户:',
-              userLanguage,
-              ')'
-            );
-
-            if (needsTranslation) {
-              console.log(
-                '6. 开始翻译，从',
-                cozeLanguage,
-                '翻译到',
-                userLanguage
-              );
-
-              // 使用 AI SDK 进行翻译
-              const translationModel = createOpenAI({
-                apiKey: process.env.OPENAI_API_KEY,
-              }).chat('gpt-4o-mini');
-
-              // 根据翻译方向设置提示词
-              const translationPrompt =
-                userLanguage === 'zh'
-                  ? `请将以下英文手相分析翻译成中文，保持专业术语和格式不变，保持原有的结构和段落格式：\n\n${finalText}`
-                  : `Please translate the following Chinese palm reading analysis to English, keeping professional terms and format unchanged, maintaining the original structure and paragraph format:\n\n${finalText}`;
-
-              console.log(
-                '7. 翻译提示词前100字符:',
-                translationPrompt.substring(0, 100)
-              );
-
-              const translationResult = await streamText({
-                model: translationModel,
-                messages: [
-                  {
-                    role: 'user',
-                    content: translationPrompt,
-                  },
-                ],
-              });
-
-              // 收集翻译结果
-              let translatedText = '';
-              for await (const chunk of translationResult.textStream) {
-                translatedText += chunk;
-              }
-
-              finalText = translatedText || finalText;
-              console.log('8. 翻译完成，翻译后长度:', finalText.length);
-              console.log('9. 翻译后前200字符:', finalText.substring(0, 200));
-            } else {
-              console.log('6. 不需要翻译，直接使用 Coze 原始回复');
-            }
-
-            // 步骤4: 流式返回最终文本（翻译后的或原始的）
-            console.log(
-              '10. 开始流式返回文本，最终文本长度:',
-              finalText.length
-            );
-            const chunkSize = 40;
-            const totalChunks = Math.ceil(finalText.length / chunkSize);
-            const targetDuration = 3000;
-            const delayPerChunk = Math.floor(targetDuration / totalChunks);
-            const actualDelay = Math.max(10, Math.min(delayPerChunk, 200));
-
-            for (let i = 0; i < finalText.length; i += chunkSize) {
-              const textChunk = finalText.slice(i, i + chunkSize);
-              const chunk = {
-                type: 'text-delta',
-                textDelta: textChunk,
-              };
-              const line = `0:${JSON.stringify(chunk)}\n`;
-              const encoded = encoder.encode(line);
-              controller.enqueue(encoded);
-              if (i + chunkSize < finalText.length) {
-                // eslint-disable-next-line no-await-in-loop
-                await new Promise((r) => setTimeout(r, actualDelay));
-              }
-            }
-
-            console.log('11. 流式返回完成，共发送', totalChunks, '个块');
-            console.log('=== 翻译处理完成 ===');
-          } catch (translationError) {
-            console.error('翻译错误:', translationError);
-            // 如果翻译失败，返回原始文本
-            console.log('翻译失败，返回 Coze 原始回复');
-            const chunkSize = 40;
-            for (let i = 0; i < fullText.length; i += chunkSize) {
-              const textChunk = fullText.slice(i, i + chunkSize);
-              const chunk = {
-                type: 'text-delta',
-                textDelta: textChunk,
-              };
-              const line = `0:${JSON.stringify(chunk)}\n`;
-              controller.enqueue(encoder.encode(line));
-            }
-          }
-        } else {
-          console.log(
-            '没有收集到文本，hasText:',
-            hasText,
-            'fullText length:',
-            fullText.length
-          );
         }
       } catch (error) {
         console.error('Stream error:', error);
